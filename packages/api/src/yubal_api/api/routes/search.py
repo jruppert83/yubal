@@ -112,7 +112,8 @@ def search_ytmusic(
         # If doing a default mixed search, prioritize albums and cap songs to top 10
         if not filter_type:
             top_results = [r for r in enriched_results if r.get("category") == "Top result"]
-            albums = [r for r in enriched_results if str(r.get("type")).lower() == "album" and r not in top_results]artists = [r for r in enriched_results if r.get("type") == "artist" and r not in top_results]
+            albums = [r for r in enriched_results if str(r.get("type")).lower() == "album" and r not in top_results]
+            artists = [r for r in enriched_results if str(r.get("type")).lower() == "artist" and r not in top_results]
             playlists = [r for r in enriched_results if r.get("type") == "playlist" and r not in top_results]
             songs = [r for r in enriched_results if r.get("type") in ("song", "video") and r not in top_results][:10]
 
