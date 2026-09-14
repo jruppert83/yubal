@@ -57,15 +57,21 @@ function SearchBar({ onSearch }: { onSearch?: () => void }) {
       onSubmit={(e) => {
         e.preventDefault();
 
-        // 1. Unfocus the input to retract the mobile keyboard
+        // 1. Dismiss mobile keyboard
         const input = e.currentTarget.querySelector<HTMLInputElement>("input[name='q']");
         input?.blur();
 
+        // 2. Click the close button using its aria-label
+        const closeButton = document.querySelector<HTMLButtonElement>(
+          'button[aria-label="Close menu"], button[aria-label="Close"]'
+        );
+        closeButton?.click();
+
+        // 3. Optional custom callback
+        onSearch?.();
+
         const query = new FormData(e.currentTarget).get("q")?.toString().trim();
         if (query) {
-          // 2. Trigger parent callback (closes the mobile sidebar/drawer)
-          onSearch?.();
-
           navigate({
             to: "/search",
             search: { q: query } as any,
