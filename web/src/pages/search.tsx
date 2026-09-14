@@ -91,7 +91,7 @@ export function SearchPage() {
         {selectedAlbum && (
           <Button
             size="sm"
-            variant="flat"
+            variant="ghost"
             onPress={() => setSelectedAlbum(null)}
           >
             <ArrowLeftIcon className="mr-1 h-4 w-4" />
@@ -132,7 +132,7 @@ export function SearchPage() {
             </div>
             {selectedAlbum.url && (
               <Button
-                color="primary"
+                variant="primary"
                 onPress={() => handleDownload(selectedAlbum.url)}
               >
                 <DownloadIcon className="h-4 w-4" />

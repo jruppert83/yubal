@@ -119,10 +119,10 @@ export function normalizeSearchResult(raw: YTMSearchResult): NormalizedSearchRes
       : undefined;
 
   const thumbnailUrl = raw.thumbnails?.length
-    ? raw.thumbnails[raw.thumbnails.length - 1].url
-    : undefined;
+  ? raw.thumbnails[raw.thumbnails.length - 1]?.url
+  : undefined;
 
-  let subtitle = "";
+  let subtitle='';
   switch (resultType) {
     case "artist":
       subtitle = raw.subscribers ? `${raw.subscribers} subscribers` : "Artist";
@@ -240,7 +240,7 @@ export async function fetchAlbumTracks(browseId: string): Promise<AlbumDetails> 
   const data = await fetchJson<RawAlbumDetails>(endpoint);
 
   const thumbnailUrl = data.thumbnails?.length
-    ? data.thumbnails[data.thumbnails.length - 1].url
+    ? data.thumbnails[data.thumbnails.length - 1]?.url
     : undefined;
 
   return {
