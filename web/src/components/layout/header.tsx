@@ -51,13 +51,21 @@ const navItems = [
 );*/
 function SearchBar({ onSearch }: { onSearch?: () => void }) {
   const navigate = useNavigate();
+
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
+
+        // 1. Unfocus the input to retract the mobile keyboard
+        const input = e.currentTarget.querySelector<HTMLInputElement>("input[name='q']");
+        input?.blur();
+
         const query = new FormData(e.currentTarget).get("q")?.toString().trim();
         if (query) {
+          // 2. Trigger parent callback (closes the mobile sidebar/drawer)
           onSearch?.();
+
           navigate({
             to: "/search",
             search: { q: query } as any,
