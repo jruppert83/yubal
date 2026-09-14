@@ -84,16 +84,22 @@ def _get_client(service: Any) -> Any:
     raise RuntimeError("Could not locate ytmusicapi client instance on PlaylistInfoService")
 
 
+# CURRENT CODE (Unfiltered missing limit=60)
+#raw_results = client.search(q, filter=filter_type, limit=60) if filter_type else client.search(q)
 @router.get("/search")
 def search_ytmusic(
     q: str = Query(..., min_length=1, description="Search query"),
     filter_type: str | None = Query(None, alias="filter", description="Optional filter"),
-    playlist_info: PlaylistInfoServiceDep = None,
+    playlist_info: PlaylistInfoServiceDep,
 ) -> dict[str, Any]:
     """Search YouTube Music for songs, albums, artists, or playlists."""
     try:
         client = _get_client(playlist_info)
-        raw_results = client.search(q, filter=filter_type) if filter_type else client.search(q)
+        raw_results = (
+            client.search(q, filter=filter_type, limit=60)
+            if filter_type
+            else client.search(q, limit=60)
+        )
 
         enriched_results = []
         if isinstance(raw_results, list):
@@ -103,11 +109,20 @@ def search_ytmusic(
                     _enrich_item(res_dict)
                     enriched_results.append(res_dict)
 
+        # If doing a default mixed search, prioritize albums and cap songs to top 10
+        if not filter_type:
+            top_results = [r for r in enriched_results if r.get("category") == "Top result"]
+            albums = [r for r in enriched_results if str(r.get("type")).lower() == "album" and r not in top_results]artists = [r for r in enriched_results if r.get("type") == "artist" and r not in top_results]
+            playlists = [r for r in enriched_results if r.get("type") == "playlist" and r not in top_results]
+            songs = [r for r in enriched_results if r.get("type") in ("song", "video") and r not in top_results][:10]
+
+            # Re-combine with albums first, followed by top 10 songs, artists, and playlists
+            enriched_results = top_results + albums + songs + artists + playlists
+
         return {"results": enriched_results}
     except Exception as err:
         logger.error("Search failed for query '%s': %s", q, err, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Search failed: {str(err)}")
-
 
 @router.get("/search/album/{browse_id}")
 def get_album_tracks(
