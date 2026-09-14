@@ -20,12 +20,15 @@ import {
   RocketIcon,
   StarIcon,
   XIcon,
+  SearchIcon,
+  TrendingUpIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "Downloads", startIcon: DownloadIcon, href: "/" },
   { label: "My playlists", startIcon: ListMusicIcon, href: "/playlists" },
+  { label: "Explore", startIcon: TrendingUpIcon, href: "/explore" },
 ];
 
 export function Header() {
@@ -120,7 +123,24 @@ export function Header() {
               );
             })}
           </ul>
-
+          {/* Header Search Bar */}
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const query = new FormData(e.currentTarget).get("q");
+              if (query) window.location.href = `/search?q=${encodeURIComponent(query.toString())}`;
+            }}
+            className="hidden sm:flex relative items-center ml-auto"
+          >
+            <SearchIcon className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
+            <input
+              type="search"
+              name="q"
+              placeholder="Search music..."
+              className="h-9 w-40 rounded-md border bg-background pl-8 pr-3 text-sm focus:w-60 transition-all outline-none"
+            />
+          </form>
+          
           {/* Actions */}
           <div className="ml-auto flex items-center gap-2">
             {versionInfo?.updateAvailable && (
