@@ -90,7 +90,7 @@ def _get_client(service: Any) -> Any:
 def search_ytmusic(
     q: str = Query(..., min_length=1, description="Search query"),
     filter_type: str | None = Query(None, alias="filter", description="Optional filter"),
-    playlist_info: PlaylistInfoServiceDep,
+    playlist_info: PlaylistInfoServiceDep = None,
 ) -> dict[str, Any]:
     """Search YouTube Music for songs, albums, artists, or playlists."""
     try:
