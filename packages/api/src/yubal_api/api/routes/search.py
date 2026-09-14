@@ -95,32 +95,69 @@ def search_ytmusic(
     """Search YouTube Music for songs, albums, artists, or playlists."""
     try:
         client = _get_client(playlist_info)
-        raw_results = client.search(q, filter=filter_type) if filter_type else client.search(q)
 
-        enriched_results = []
-        if isinstance(raw_results, list):
-            for res in raw_results:
-                res_dict = _to_dict(res)
-                if res_dict:
-                    _enrich_item(res_dict)
-                    enriched_results.append(res_dict)
+        # If explicit filter is passed, run a single targeted search
+        if filter_type:
+            raw_results = client.search(q, filter=filter_type)
+            enriched_results = []
+            if isinstance(raw_results, list):
+                for res in raw_results:
+                    res_dict = _to_dict(res)
+                    if res_dict:
+                        _enrich_item(res_dict)
+                        enriched_results.append(res_dict)
+            return {"results": enriched_results}
 
-        # If doing a default mixed search, prioritize albums and cap songs to top 10
-        if not filter_type:
-            top_results = [r for r in enriched_results if r.get("category") == "Top result"]
-            albums = [r for r in enriched_results if str(r.get("type")).lower() == "album" and r not in top_results]
-            artists = [r for r in enriched_results if str(r.get("type")).lower() == "artist" and r not in top_results]
-            playlists = [r for r in enriched_results if str(r.get("type")).lower() == "playlist" and r not in top_results]
-            songs = [r for r in enriched_results if str(r.get("type")).lower() in ("song", "video") and r not in top_results][:10]
+        # --- DEFAULT MIXED SEARCH ---
+        # 1. Fetch default general results
+        raw_general = client.search(q) or []
 
-            # Re-combine with albums first, followed by top 10 songs, artists, and playlists
-            enriched_results = top_results + albums + songs + artists + playlists
+        # 2. Fetch targeted album results to get a deep album list
+        raw_albums = []
+        try:
+            raw_albums = client.search(q, filter="albums") or []
+        except Exception as album_err:
+            logger.warning("Dedicated album search failed, falling back to general results: %s", album_err)
 
-        return {"results": enriched_results}
+        # Process general results
+        general_enriched = []
+        for res in raw_general:
+            res_dict = _to_dict(res)
+            if res_dict:
+                _enrich_item(res_dict)
+                general_enriched.append(res_dict)
+
+        # Process album results
+        album_enriched = []
+        for res in raw_albums:
+            res_dict = _to_dict(res)
+            if res_dict:
+                _enrich_item(res_dict)
+                album_enriched.append(res_dict)
+
+        # Categorize general search items
+        top_results = [r for r in general_enriched if r.get("category") == "Top result"]
+        artists = [r for r in general_enriched if str(r.get("type")).lower() == "artist" and r not in top_results]
+        playlists = [r for r in general_enriched if str(r.get("type")).lower() == "playlist" and r not in top_results]
+        songs = [r for r in general_enriched if str(r.get("type")).lower() in ("song", "video") and r not in top_results][:10]
+
+        # Combine albums (dedicated album results + any albums in general search, deduplicated by id)
+        seen_album_ids = set()
+        combined_albums = []
+        for album in album_enriched + [r for r in general_enriched if str(r.get("type")).lower() == "album"]:
+            album_id = album.get("id") or album.get("browseId")
+            if album_id and album_id not in seen_album_ids and album not in top_results:
+                seen_album_ids.add(album_id)
+                combined_albums.append(album)
+
+        # Final layout: Top result -> ALL found Albums -> Top 10 Songs -> Artists -> Playlists
+        final_results = top_results + combined_albums + songs + artists + playlists
+
+        return {"results": final_results}
     except Exception as err:
         logger.error("Search failed for query '%s': %s", q, err, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Search failed: {str(err)}")
-
+        
 @router.get("/search/album/{browse_id}")
 def get_album_tracks(
     browse_id: str,
