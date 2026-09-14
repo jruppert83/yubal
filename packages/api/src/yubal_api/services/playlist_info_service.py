@@ -3,6 +3,8 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+from ytmusicapi import YTMusic
 
 from yubal import ContentKind, parse_playlist_id
 from yubal.client import YTMusicClient
@@ -42,7 +44,16 @@ class PlaylistInfoService:
             cookies_path: Optional path to cookies.txt for authenticated requests.
         """
         self._client = YTMusicClient(cookies_path=cookies_path)
-
+    @property
+    def yt_client(self) -> Any:
+        """Expose the raw ytmusicapi client instance wrapped inside YTMusicClient."""
+        return (
+            getattr(self._client, "_ytmusic", None)
+            or getattr(self._client, "ytmusic", None)
+            or getattr(self._client, "_client", None)
+            or getattr(self._client, "client", None)
+            or self._client
+        )
     def get_playlist_metadata(self, url: str) -> PlaylistMetadata:
         """Get the metadata of a playlist from its URL.
 
@@ -173,4 +184,40 @@ class PlaylistInfoService:
             url=url,
             thumbnail_url=(track.thumbnails[-1].url if track.thumbnails else None),
             kind=ContentKind.TRACK,
+        )
+    def search(
+        self, query: str, filter_type: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Search YouTube Music across songs, artists, albums, or playlists.
+
+        Args:
+            query: Search query string.
+            filter_type: Optional filter ('songs', 'albums', 'artists', 'playlists').
+
+        Returns:
+            List of search result dicts.
+        """
+        return self._client.search(query, filter=filter_type)
+
+    def get_album(self, browse_id: str) -> dict[str, Any]:
+        """Fetch album details and tracklist by browse ID."""
+        # 1. Check common client attribute names
+        for attr_name in ("yt", "_yt", "ytmusic", "_ytmusic", "client", "_client", "yt_client", "_yt_client", "api"):
+            client = getattr(self, attr_name, None)
+            if client and hasattr(client, "get_album"):
+                return client.get_album(browse_id)
+
+        # 2. Dynamic scan of all object attributes for any client with a get_album method
+        for attr_name in dir(self):
+            if attr_name.startswith("__"):
+                continue
+            try:
+                attr = getattr(self, attr_name, None)
+                if attr and hasattr(attr, "get_album") and callable(getattr(attr, "get_album")):
+                    return attr.get_album(browse_id)
+            except Exception:
+                continue
+
+        raise RuntimeError(
+            f"No YTMusic client found on PlaylistInfoService. Instance keys: {list(getattr(self, '__dict__', {}).keys())}"
         )

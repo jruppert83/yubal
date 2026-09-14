@@ -37,6 +37,7 @@ from yubal_api.api.routes import (
     jobs,
     logs,
     scheduler,
+    search,
     subscriptions,
 )
 from yubal_api.db import SubscriptionRepository, create_db_engine
@@ -209,6 +210,7 @@ def create_api_router() -> APIRouter:
     api_router.include_router(cookies.router)
     api_router.include_router(subscriptions.router)
     api_router.include_router(scheduler.router)
+    api_router.include_router(search.router)  # Include search router
     return api_router
 
 

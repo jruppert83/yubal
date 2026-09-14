@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { basePath } from "@/lib/base-path";
 import { JobsPage } from "@/pages/jobs";
+import { SearchPage } from "@/pages/search";
 import { SubscriptionsPage } from "@/pages/subscriptions";
 import { Toast } from "@heroui/react";
 import {
@@ -55,6 +56,16 @@ const subscriptionsRoute = createRoute({
   component: SubscriptionsPage,
 });
 
-const routeTree = rootRoute.addChildren([jobsRoute, subscriptionsRoute]);
+const searchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/search",
+  component: SearchPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  jobsRoute,
+  subscriptionsRoute,
+  searchRoute,
+]);
 
 export const router = createRouter({ routeTree, basepath: basePath || "/" });

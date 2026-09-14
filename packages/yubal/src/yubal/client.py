@@ -619,3 +619,34 @@ class YTMusicClient:
             )
 
         return None
+    def search(
+        self, query: str, filter: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Search YouTube Music for songs, artists, albums, or playlists.
+
+        Args:
+            query: Search query string.
+            filter: Optional category filter ('songs', 'albums', 'artists', 'playlists').
+
+        Returns:
+            List of raw search result dictionaries from ytmusicapi.
+
+        Raises:
+            UpstreamAPIError: If API request fails.
+        """
+        logger.debug("Searching YTMusic: %s (filter=%s)", query, filter)
+        try:
+            data = self._ytm.search(
+                query,
+                filter=filter,
+                limit=self._config.search_limit,
+                ignore_spelling=self._config.ignore_spelling,
+            )
+        except (YTMusicServerError, YTMusicUserError) as e:
+            logger.warning("YTMusic API error for search '%s': %s", query, e)
+            raise UpstreamAPIError(f"Search failed: {e}") from e
+        except YTMusicError as e:
+            logger.warning("YTMusic error for search '%s': %s", query, e)
+            raise UpstreamAPIError(f"Search failed: {e}") from e
+
+        return data

@@ -24,12 +24,58 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 const navItems = [
   { label: "Downloads", startIcon: DownloadIcon, href: "/" },
   { label: "My playlists", startIcon: ListMusicIcon, href: "/playlists" },
   { label: "Explore", startIcon: TrendingUpIcon, href: "/explore" },
 ];
+/*const searchBar = (
+  <form
+    onSubmit={(e) => {
+      e.preventDefault();
+      const query = new FormData(e.currentTarget).get("q");
+      if (query) window.location.href = `/search?q=${encodeURIComponent(query.toString())}`;
+    }}
+    className="relative flex items-center w-full"
+  >
+    <SearchIcon className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
+    <input
+      type="search"
+      name="q"
+      placeholder="Search music..."
+      className="h-9 w-full rounded-md border bg-background pl-8 pr-3 text-sm transition-all outline-none"
+    />
+  </form>
+);*/
+function SearchBar({ onSearch }: { onSearch?: () => void }) {
+  const navigate = useNavigate();
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const query = new FormData(e.currentTarget).get("q")?.toString().trim();
+        if (query) {
+          onSearch?.();
+          navigate({
+            to: "/search",
+            search: { q: query } as any,
+          });
+        }
+      }}
+      className="relative flex items-center w-full"
+    >
+      <SearchIcon className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
+      <input
+        type="search"
+        name="q"
+        placeholder="Search music..."
+        className="h-9 w-full rounded-md border bg-background pl-8 pr-3 text-sm transition-all outline-none"
+      />
+    </form>
+  );
+}
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -124,23 +170,12 @@ export function Header() {
             })}
           </ul>
           {/* Header Search Bar */}
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              const query = new FormData(e.currentTarget).get("q");
-              if (query) window.location.href = `/search?q=${encodeURIComponent(query.toString())}`;
-            }}
-            className="hidden sm:flex relative items-center ml-auto"
-          >
-            <SearchIcon className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
-            <input
-              type="search"
-              name="q"
-              placeholder="Search music..."
-              className="h-9 w-40 rounded-md border bg-background pl-8 pr-3 text-sm focus:w-60 transition-all outline-none"
-            />
-          </form>
-          
+          <li>
+              <div className="hidden sm:flex w-48 ml-auto">
+                <SearchBar />
+              </div>
+            </li>
+
           {/* Actions */}
           <div className="ml-auto flex items-center gap-2">
             {versionInfo?.updateAvailable && (
@@ -203,6 +238,11 @@ export function Header() {
       {isMenuOpen && (
         <div className="border-separator bg-background/90 fixed inset-x-0 top-16 bottom-0 z-30 overflow-y-auto border-t backdrop-blur-lg sm:hidden">
           <ul className="flex flex-col gap-4 p-6">
+            <li>
+              <div className="w-full pb-2">
+                <SearchBar />
+              </div>
+            </li>
             {navItems.map((item) => (
               <li key={item.href}>
                 <Link
