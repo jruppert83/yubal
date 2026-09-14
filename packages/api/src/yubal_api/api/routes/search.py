@@ -84,22 +84,18 @@ def _get_client(service: Any) -> Any:
     raise RuntimeError("Could not locate ytmusicapi client instance on PlaylistInfoService")
 
 
-# CURRENT CODE (Unfiltered missing limit=60)
-#raw_results = client.search(q, filter=filter_type, limit=60) if filter_type else client.search(q)
+
+#raw_results = client.search(q, filter=filter_type) if filter_type else client.search(q)
 @router.get("/search")
 def search_ytmusic(
     q: str = Query(..., min_length=1, description="Search query"),
-    filter_type: str | None = Query(None, alias="filter", description="Optional filter"),
     playlist_info: PlaylistInfoServiceDep = None,
+    filter_type: str | None = Query(None, alias="filter", description="Optional filter"),
 ) -> dict[str, Any]:
     """Search YouTube Music for songs, albums, artists, or playlists."""
     try:
         client = _get_client(playlist_info)
-        raw_results = (
-            client.search(q, filter=filter_type, limit=60)
-            if filter_type
-            else client.search(q, limit=60)
-        )
+        raw_results = client.search(q, filter=filter_type) if filter_type else client.search(q)
 
         enriched_results = []
         if isinstance(raw_results, list):
@@ -114,8 +110,8 @@ def search_ytmusic(
             top_results = [r for r in enriched_results if r.get("category") == "Top result"]
             albums = [r for r in enriched_results if str(r.get("type")).lower() == "album" and r not in top_results]
             artists = [r for r in enriched_results if str(r.get("type")).lower() == "artist" and r not in top_results]
-            playlists = [r for r in enriched_results if r.get("type") == "playlist" and r not in top_results]
-            songs = [r for r in enriched_results if r.get("type") in ("song", "video") and r not in top_results][:10]
+            playlists = [r for r in enriched_results if str(r.get("type")).lower() == "playlist" and r not in top_results]
+            songs = [r for r in enriched_results if str(r.get("type")).lower() in ("song", "video") and r not in top_results][:10]
 
             # Re-combine with albums first, followed by top 10 songs, artists, and playlists
             enriched_results = top_results + albums + songs + artists + playlists
