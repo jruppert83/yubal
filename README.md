@@ -2,6 +2,10 @@
 
 # yubal
 
+This fork is building in a search and discover component that also shows library content but does not have a library management layer.
+
+!It is only partly functional!
+
 Self-hosted YouTube Music downloader. Paste a link, get a tagged, organized library.
 
 Scheduled sync. Smart deduplication. Media server ready. Browser extension included.
