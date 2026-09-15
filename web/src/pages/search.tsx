@@ -5,7 +5,7 @@ import {
   type AlbumDetails,
   type NormalizedSearchResult,
 } from "@/api/search";
-import { useJobs } from "@/features/jobs/jobs-context"; // <--- Add this import
+import { useJobs } from "@/features/jobs/jobs-context";
 import { Button } from "@heroui/react";
 import { useSearch } from "@tanstack/react-router";
 import {
@@ -30,6 +30,9 @@ export function SearchPage() {
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumDetails | null>(null);
   const [isLoadingAlbum, setIsLoadingAlbum] = useState(false);
 
+  // Track clicked download URLs
+  const [disabledUrls, setDisabledUrls] = useState<string[]>([]);
+
   // Consume startJob from jobs context
   const { startJob } = useJobs();
 
@@ -50,9 +53,10 @@ export function SearchPage() {
       .finally(() => setIsLoading(false));
   }, [query]);
 
-  // Dispatch download directly through startJob
+  // Dispatch download directly through startJob & disable button
   const handleDownload = async (url?: string) => {
     if (!url) return;
+    setDisabledUrls((prev) => [...prev, url]);
     try {
       await startJob(url, 100);
     } catch (err) {
@@ -133,10 +137,11 @@ export function SearchPage() {
             {selectedAlbum.url && (
               <Button
                 variant="primary"
+                isDisabled={disabledUrls.includes(selectedAlbum.url)}
                 onPress={() => handleDownload(selectedAlbum.url)}
               >
                 <DownloadIcon className="h-4 w-4" />
-                Download Full Album
+                {disabledUrls.includes(selectedAlbum.url) ? "Queued" : "Download Full Album"}
               </Button>
             )}
           </div>
@@ -163,10 +168,11 @@ export function SearchPage() {
                 <Button
                   size="sm"
                   variant="secondary"
+                  isDisabled={disabledUrls.includes(track.url)}
                   onPress={() => handleDownload(track.url)}
                 >
                   <DownloadIcon className="h-4 w-4" />
-                  Download
+                  {disabledUrls.includes(track.url) ? "Queued" : "Download"}
                 </Button>
               </li>
             ))}
@@ -208,10 +214,11 @@ export function SearchPage() {
                     <Button
                       size="sm"
                       variant="secondary"
+                      isDisabled={disabledUrls.includes(song.url)}
                       onPress={() => handleDownload(song.url)}
                     >
                       <DownloadIcon className="h-4 w-4" />
-                      Download
+                      {disabledUrls.includes(song.url) ? "Queued" : "Download"}
                     </Button>
                   </li>
                 ))}
