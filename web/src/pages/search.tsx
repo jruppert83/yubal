@@ -147,35 +147,38 @@ export function SearchPage() {
           </div>
 
           <ul className="flex flex-col gap-2">
-            {selectedAlbum.tracks.map((track, idx) => (
-              <li
-                key={track.id}
-                className="border-separator bg-background/50 flex items-center justify-between rounded-lg border p-3 hover:bg-background/80"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  <span className="w-6 text-center text-sm text-muted-foreground">
-                    {idx + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-foreground">
-                      {track.title}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {track.artistName} {track.duration ? `• ${track.duration}` : ""}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  isDisabled={disabledUrls.includes(track.url)}
-                  onPress={() => handleDownload(track.url)}
+            {selectedAlbum.tracks.map((track, idx) => {
+              const isQueued = Boolean(track.url && disabledUrls.includes(track.url));
+              return (
+                <li
+                  key={track.id}
+                  className="border-separator bg-background/50 flex items-center justify-between rounded-lg border p-3 hover:bg-background/80"
                 >
-                  <DownloadIcon className="h-4 w-4" />
-                  {disabledUrls.includes(track.url) ? "Queued" : "Download"}
-                </Button>
-              </li>
-            ))}
+                  <div className="flex items-center gap-4 min-w-0">
+                    <span className="w-6 text-center text-sm text-muted-foreground">
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-foreground">
+                        {track.title}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {track.artistName} {track.duration ? `• ${track.duration}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    isDisabled={isQueued}
+                    onPress={() => handleDownload(track.url)}
+                  >
+                    <DownloadIcon className="h-4 w-4" />
+                    {isQueued ? "Queued" : "Download"}
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -191,37 +194,40 @@ export function SearchPage() {
                 Songs
               </h2>
               <ul className="flex flex-col gap-2">
-                {grouped.songs.map((song) => (
-                  <li
-                    key={song.id}
-                    className="border-separator bg-background/50 flex items-center gap-4 rounded-lg border p-3"
-                  >
-                    {song.thumbnailUrl && (
-                      <img
-                        src={song.thumbnailUrl}
-                        alt={song.title}
-                        className="h-12 w-12 rounded-md object-cover"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-foreground">
-                        {song.title}
-                      </p>
-                      <p className="truncate text-sm text-muted-foreground">
-                        {song.subtitle}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      isDisabled={disabledUrls.includes(song.url)}
-                      onPress={() => handleDownload(song.url)}
+                {grouped.songs.map((song) => {
+                  const isQueued = Boolean(song.url && disabledUrls.includes(song.url));
+                  return (
+                    <li
+                      key={song.id}
+                      className="border-separator bg-background/50 flex items-center gap-4 rounded-lg border p-3"
                     >
-                      <DownloadIcon className="h-4 w-4" />
-                      {disabledUrls.includes(song.url) ? "Queued" : "Download"}
-                    </Button>
-                  </li>
-                ))}
+                      {song.thumbnailUrl && (
+                        <img
+                          src={song.thumbnailUrl}
+                          alt={song.title}
+                          className="h-12 w-12 rounded-md object-cover"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-foreground">
+                          {song.title}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {song.subtitle}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        isDisabled={isQueued}
+                        onPress={() => handleDownload(song.url)}
+                      >
+                        <DownloadIcon className="h-4 w-4" />
+                        {isQueued ? "Queued" : "Download"}
+                      </Button>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           )}
